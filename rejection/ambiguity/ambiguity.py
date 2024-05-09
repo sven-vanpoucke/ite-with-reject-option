@@ -39,12 +39,13 @@ def ambiguity_rejection(max_rr, detail_factor, model, xt, all_data, file_path, e
     # size_of_ci = ((y_upper - y_lower) + (y_upper2 - y_lower2) + (y_upper3 - y_lower3) + (y_upper4 - y_lower4)) /4 # confidence interval
     
     size_of_ci = ((y_upper - y_lower) + (y_upper2 - y_lower2)) /2 # confidence interval
-    print("Size of CI:")
-    print(size_of_ci)
-    all_data['Ambiguity Score'] = size_of_ci
+    # all_data['Ambiguity Score'] = size_of_ci
+    all_data['Ambiguity Score'] = all_data['size_of_ci']
     all_data = all_data.sort_values(by='Ambiguity Score', ascending=False).copy()
     all_data = all_data.reset_index(drop=True)
 
+    all_data.to_csv(f'output/csv/{dataset}/{experiment_id}_{dataset}_ambiguity.csv', index=False)
+    
     # Normalize the Ambiguity Score
     all_data['Ambiguity Score Normalized'] = (all_data['Ambiguity Score'] - all_data['Ambiguity Score'].min()) / (all_data['Ambiguity Score'].max() - all_data['Ambiguity Score'].min())
 

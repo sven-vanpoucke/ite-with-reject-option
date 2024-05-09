@@ -1,4 +1,5 @@
 from .helper import f, train_model
+import matplotlib.pyplot as plt
 
 from evaluator.performance import calculate_performance_metrics
 from evaluator.evaluator import calculate_all_metrics
@@ -85,9 +86,11 @@ def novelty_rejection(type_nr, max_rr, detail_factor, model_name, x, all_data, f
         # split the data
         t_data = all_data[all_data['treatment'] == 1].copy()
         ut_data = all_data[all_data['treatment'] == 0].copy()
-        t_x = x[all_data['treatment'] == 1].copy()
-        ut_x = x[all_data['treatment'] == 0].copy()
-
+        t_x = all_data[all_data['treatment'] == 1].filter(regex='^feature_').copy()
+        ut_x = all_data[all_data['treatment'] == 1].filter(regex='^feature_').copy()
+        # t_x = all_data[all_data['treatment'] == 1].copy()
+        # ut_x = x[all_data['treatment'] == 0].copy()
+        
         t_data['Novelty Score'] = 0 # Amount of times rejected
         ut_data['Novelty Score'] = 0
         all_data['Novelty Score'] = 0
@@ -143,14 +146,109 @@ def novelty_rejection(type_nr, max_rr, detail_factor, model_name, x, all_data, f
     df = pd.DataFrame(data)
     df.to_csv(f'output/csv/{dataset}/{experiment_id}_{dataset}.csv', index=False)
 
-
     # Calculate the metrics for heuristic rejection rate
-    num_to_set = int(heuristic_reject_rate / (100.0*detail_factor) * len(all_data)) # example: 60/100 = 0.6 * length of the data
+    num_to_set = int(heuristic_reject_rate*100 / (100.0*detail_factor) * len(all_data)) # example: 60/100 = 0.6 * length of the data
 
     all_data['ite_reject'] = all_data['ite_pred']
+    all_data['rejected'] = False
     all_data['ite_reject'] = all_data['ite_reject'].astype(object)  # Change dtype of entire column
     if num_to_set != 0:
         all_data.loc[:num_to_set -1, 'ite_reject'] = 'R'
+        all_data.loc[:num_to_set -1, 'rejected'] = True
+
+    all_data.to_csv(f'output/data/{dataset}/{experiment_id}_all_data.csv', index=False)
+
+    # Create the histogram
+    all_data['R']= all_data['rejected'].apply(lambda x: 1 if x == True else 0)
+    all_data['T']= all_data['rejected'].apply(lambda x: 1 if x == True else 1)
+    if dataset == "TWINSC":
+        plt.hist(all_data['ite_sign'], bins=(-1,0,1,2), align='left', rwidth=0.8, weights=all_data['T'], color='grey')
+        plt.hist(all_data['ite_sign'], bins=(-1,0,1,2), align='left', rwidth=0.8, weights=all_data['R'], color='red')
+        ## Set labels and title
+        plt.xlabel('Sign of TE')
+        plt.ylabel('Rejected samples in red')
+        plt.title('Histogram of Count of Rejected Observations by Decile')
+        ## Adjust layout and display the plot
+        plt.xticks((-1,0,1))
+    else:
+        plt.hist(all_data['decile'], bins=range(11), align='left', rwidth=0.8, weights=all_data['T'], color='grey')
+        plt.hist(all_data['decile'], bins=range(11), align='left', rwidth=0.8, weights=all_data['R'], color='red')
+        ## Set labels and title
+        plt.xlabel('Decile of TE')
+        plt.ylabel('Rejected samples in red')
+        plt.title('Histogram of Count of Rejected Observations by Decile')
+        ## Adjust layout and display the plot
+        plt.xticks(range(10))
+    plt.grid(axis='y', alpha=0.75)
+    plt.tight_layout()
+    plt.savefig(f"output/data/{dataset}/{experiment_id}_histogram.png")
+    plt.close()
+
+    # Create the stack bar (se)
+    if dataset == "TWINSC":
+        se_r_sum = all_data.loc[all_data['rejected'] == True].groupby('category')['se'].sum()
+        se_not_r_sum = all_data.loc[all_data['rejected'] == False].groupby('category')['se'].sum()
+        # Get the index values for the deciles
+        category_index = se_not_r_sum.index
+        se_r_sum = se_r_sum.reindex(category_index, fill_value=0)
+
+        plt.bar(category_index, se_not_r_sum, label='SE for accepted observations', color='green')
+        plt.bar(category_index, se_r_sum, bottom=se_not_r_sum, label='SE for rejected observations', color='red')
+
+        # Set labels and title
+        plt.xlabel('Decile')
+        plt.ylabel('Sum of Squared Error of TE')
+        plt.title('Sum of Squared Error of TE by Category')
+        # plt.tight_layout()
+        plt.savefig(f"output/data/{dataset}/{experiment_id}_stacked_bar.png")
+        plt.close()
+
+        se_sum = all_data.groupby('category')['se'].sum()
+        # Get the index values for the deciles
+        category_index = se_sum.index
+
+        plt.bar(category_index, se_sum, label='SE for all observations', color='grey')
+
+        # Set labels and title
+        plt.xlabel('Category')
+        plt.ylabel('Sum of Squared Error of TE')
+        plt.title('Sum of Squared Error of TE by Category')
+        # plt.tight_layout()
+        plt.savefig(f"output/data/{dataset}/{experiment_id}_Total_stacked_bar.png")
+        plt.close()
+
+    else:
+        se_r_sum = all_data.loc[all_data['rejected'] == True].groupby('decile')['se'].sum()
+        se_not_r_sum = all_data.loc[all_data['rejected'] == False].groupby('decile')['se'].sum()
+        # Get the index values for the deciles
+        decile_index = se_not_r_sum.index
+        se_r_sum = se_r_sum.reindex(decile_index, fill_value=0)
+
+        plt.bar(decile_index, se_not_r_sum, label='SE for accepted observations', color='green')
+        plt.bar(decile_index, se_r_sum, bottom=se_not_r_sum, label='SE for rejected observations', color='red')
+
+        # Set labels and title
+        plt.xlabel('Decile')
+        plt.ylabel('Sum of Squared Error of TE')
+        plt.title('Sum of Squared Error of TE by Decile')
+        # plt.tight_layout()
+        plt.savefig(f"output/data/{dataset}/{experiment_id}_stacked_bar.png")
+        plt.close()
+
+        se_sum = all_data.groupby('decile')['se'].sum()
+        # Get the index values for the deciles
+        decile_index = se_sum.index
+
+        plt.bar(decile_index, se_sum, label='SE for all observations', color='grey')
+
+        # Set labels and title
+        plt.xlabel('Decile')
+        plt.ylabel('Sum of Squared Error of TE')
+        plt.title('Sum of Squared Error of TE by Decile')
+        # plt.tight_layout()
+        plt.savefig(f"output/data/{dataset}/{experiment_id}_Total_stacked_bar.png")
+        plt.close()
+
 
     metrics_dict = calculate_all_metrics('ite', 'ite_reject', all_data, file_path, {}, append_metrics_results=False, print=False)
 

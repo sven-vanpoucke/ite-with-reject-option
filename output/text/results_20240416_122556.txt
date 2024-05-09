@@ -1,0 +1,34 @@
+CHAPTER 1: INTRODUCTION
+# This section introduces the purpose and background of the analysis.
+
+In this analysis, we aim to evaluate the performance of different reject options for Information Treatment Effect (ITE) models.The ITE model predicts the individual treatment effects in a given dataset, providing valuable insights into the impact of interventions.
+For your information, this file has been automatically generated on: 2024-04-16 12:25
+
+REJECTION for TWINSC
+
+
+
+Table of all_data (First 5 rows)
++-----------+-----------+-----------+----------+------+------+------+------------+--------------------+----------+---------------+------------+---------+-----------+-----------------------+--------------------+---------------+-----+----------+------------------------------+--------------------+
+| treatment | y_t1_pred | y_t0_pred | ite_pred | y_t0 | y_t1 | ite  | ite_reject |         se         | ite_sign | ite_pred_sign | Sign Error |  rank   | rank_pred |      rank_weight      |      se_rank       | Novelty Score | ood | y_reject | amount_of_times_rejected_new |  Ambiguity Score   |
++-----------+-----------+-----------+----------+------+------+------+------------+--------------------+----------+---------------+------------+---------+-----------+-----------------------+--------------------+---------------+-----+----------+------------------------------+--------------------+
+|    nan    |  0.0315   |  0.6374   | -0.6058  | 0.0  | 1.0  | 1.0  |  -0.6058   |     2.57859364     |   1.0    |     -1.0      |    1.0     | 11155.5 |    5.0    | 8.964188068665681e-05 | 11145.502241047017 |       0       |  1  |  False   |              0               |        0.0         |
+|    nan    |  0.2843   |   0.59    | -0.3057  | 0.0  | 1.0  | 1.0  |  -0.3057   | 1.7048524900000002 |   1.0    |     -1.0      |    1.0     | 11155.5 |   28.0    | 8.964188068665681e-05 | 11099.570279234458 |       0       |  1  |  False   |              0               |        1.0         |
+|    nan    |  0.3858   |  0.6263   | -0.2405  | 0.0  | 1.0  | 1.0  |  -0.2405   | 1.5388402499999998 |   1.0    |     -1.0      |    1.0     | 11155.5 |   57.0    | 8.964188068665681e-05 | 11041.791246470351 |       0       |  1  |  False   |              0               |        1.0         |
+|    nan    |  0.4284   |  0.1895   |  0.2389  | 1.0  | 0.0  | -1.0 |   0.2389   | 1.5348732100000002 |   -1.0   |      1.0      |    1.0     |  337.5  |  11347.0  | 0.002962962962962963  | 359138.04518518515 |       0       |  1  |  False   |              0               | 0.5249999999999986 |
+|    nan    |  0.7482   |  0.5183   |  0.2299  | 1.0  | 0.0  | -1.0 |   0.2299   | 1.5126540099999999 |   -1.0   |      1.0      |    1.0     |  337.5  |  11344.0  | 0.002962962962962963  | 358942.3474074074  |       0       | -1  |  False   |              1               |        1.0         |
++-----------+-----------+-----------+----------+------+------+------+------------+--------------------+----------+---------------+------------+---------+-----------+-----------------------+--------------------+---------------+-----+----------+------------------------------+--------------------+
+# Experiment -1: No Rejector - Baseline Model
+# Experiment 0: Perfect Rejection
+# Experiment 1: Rejection based on IsolationForest (train data) - Novelty Type I
+# Experiment 2: Rejection based on OneClassSVM (train data) - Novelty Type I
+# Experiment 3: Rejection based on LocalOutlierFactor (train data) - Novelty Type I
+# Experiment 4: Rejection based on IsolationForest (train data) - Novelty Type II
+# Experiment 5: Rejection based on OneClassSVM (train data) - Novelty Type II
+# Experiment 6: Rejection based on LocalOutlierFactor (train data) - Novelty Type II
+# Experiment 7: Rejection based on IsolationForest (train data) - Novelty Type III
+# Experiment 8: Rejection based on OneClassSVM (train data) - Novelty Type III
+# Experiment 9: Rejection based on LocalOutlierFactor (train data) - Novelty Type III
+# Experiment 10: Rejection based on RandomForestQuantileRegressor - Ambiguity Type I
+
+Table of results of the experiments

@@ -21,7 +21,6 @@ def f(type, contamination, t_x, ut_x, t_data, ut_data, detail_factor, model_name
     elif model_name == LocalOutlierFactor:
         t_model = train_model(t_x, LocalOutlierFactor, contamination=contamination, novelty=True)
         ut_model = train_model(ut_x, LocalOutlierFactor, contamination=contamination, novelty=True)
-
     if type == 2:
         t_data['ood'] = pd.Series(ut_model.predict(t_x), name='ood').copy()
         ut_data['ood'] = pd.Series(t_model.predict(ut_x), name='ood').copy()

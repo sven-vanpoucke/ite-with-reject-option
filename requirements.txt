@@ -6,3 +6,4 @@ seaborn
 tabulate
 forestci
 quantile-forest
+matplotlib-label-lines

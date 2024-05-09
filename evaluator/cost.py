@@ -15,6 +15,8 @@ Comments:
 
 This file contains everything related to misclassification costs. These amount are expressed in a valuta (p.e. EUR).
 """
+
+import numpy as np
 def categorize(row, is_pred=True):
     """
     Categorizes a row based on the values of y_t0 and y_t1.
@@ -32,16 +34,49 @@ def categorize(row, is_pred=True):
     else:
         y_t0 = row['y_t0']
         y_t1 = row['y_t1']
-
-    if y_t0 == 0 and y_t1 == 0:
-        return 'Lost Cause'
-    elif y_t0 == 1 and y_t1 == 0:
-        return 'Sleeping Dog'
-    elif y_t0 == 0 and y_t1 == 1:
-        return 'Persuadable' # (can be rescued)
-    elif y_t0 == 1 and y_t1 == 1:
-        return 'Sure Thing'
     
+    if y_t0 == 0:
+        y_t0_sign = 0
+    else:
+        y_t0_sign = y_t0/np.abs(y_t0)
+    
+    if y_t1 == 0:
+        y_t1_sign = 0
+    else:
+        y_t1_sign = y_t0/np.abs(y_t0) if np.abs(y_t0) != 0 else 0
+
+    if y_t0_sign == 0 and y_t1_sign == 0:
+        return 'Lost Cause'
+    elif y_t0_sign == 1 and y_t1_sign == 0:
+        return 'Sleeping Dog'
+    elif y_t0_sign == 0 and y_t1_sign == 1:
+        return 'Persuadable' # (can be rescued)
+    elif y_t0_sign == 1 and y_t1_sign == 1:
+        return 'Sure Thing'
+        
+def categorize_decision(row):
+    ite = row['ite']
+    ite_pred = row['ite_pred']
+    if ite_pred == 0:
+        ite_pred_sign = 0
+    else:
+        ite_pred_sign = ite_pred/np.abs(ite_pred)
+    if ite == 0:
+        ite_sign = 0
+    else:
+        ite_sign = ite/np.abs(ite)
+
+    if ite_pred_sign == ite_sign: # both negative, both 0 or both positive
+        "Same Action"
+    elif ite_pred_sign <= 0 and ite_sign == 0: # No treatment
+        "Same Action"
+    elif ite_pred_sign <= 0 and ite_sign > 0: # In reality we'll do nothing, so mis out on the positive effect 
+        "Missed Positive Effect"
+    elif ite_pred_sign > 0 and ite_sign < 0: # In reality we'll treat, so cause a (severe) mistake
+        "Caused Negative Effect"
+    
+
+
 
 def categorize_ite(row, is_pred=True):
     ite = row['y_t0_pred']
@@ -56,7 +91,6 @@ def categorize_ite(row, is_pred=True):
         return 'Persuadable' # ITE IS POSITIVE; but we predict NEGATIVE
     elif ite >= 0 and ite_pred >= 0:
         return 'Sure Thing' # BOTH ITE ARE POSITIVE
-
 
 def define_cost_matrix(cost_correct=0, cost_same_treatment=0, cost_wasted_treatment=5, cost_potential_improvement=30):
     cost_matrix = {

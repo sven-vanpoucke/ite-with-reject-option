@@ -192,7 +192,6 @@ def calculate_performance_metrics(value, value_pred, data, file_path, print=Fals
     metrics_dict['Rejection Rate'] = rr
 
     # Add extra data to data
-    data['ite_sign'] = data['ite']/abs(data['ite']) # -1 or +1
     data['ite_pred_sign'] = data['ite_pred']/abs(data['ite_pred']) # -1 or +1
     data['se'] = (data['ite'] - data['ite_pred']) ** 2
     data['Sign Error'] = ( ( data['ite']/abs(data['ite']) - data['ite_pred']/abs(data['ite_pred']) ) / 2 ) ** 2
@@ -202,18 +201,19 @@ def calculate_performance_metrics(value, value_pred, data, file_path, print=Fals
 
     # RMSE
     mse = data['se'].mean()
-    rmse = sqrt(mse)
-    metrics_dict['RMSE Original'] = rmse
+    # rmse = sqrt(mse)
+    metrics_dict['RMSE Original'] = mse
 
     mse_not_rejected = data_not_rejected['se'].mean()
-    rmse_not_rejected = sqrt(mse_not_rejected)
-    metrics_dict['RMSE Accepted'] = rmse_not_rejected
+    # rmse_not_rejected = sqrt(mse_not_rejected)
+    metrics_dict['RMSE Accepted'] = mse_not_rejected
 
-    metrics_dict['RMSE Change (%)'] =  (rmse_not_rejected - rmse) / rmse * 100
+    metrics_dict['RMSE Change (%)'] =  (mse_not_rejected - mse) / mse * 100
+    metrics_dict['RMSE Change'] =  (mse_not_rejected - mse) / mse #* 100
 
     mse_rejected = data_rejected['se'].mean()
-    rmse_rejected = sqrt(mse_rejected)
-    metrics_dict['RMSE Rejected'] = rmse_rejected
+    # rmse_rejected = sqrt(mse_rejected)
+    metrics_dict['RMSE Rejected'] = mse_rejected
 
     # Sign Accuracy
     mean_sign_error = data['Sign Error'].mean()
@@ -233,6 +233,7 @@ def calculate_performance_metrics(value, value_pred, data, file_path, print=Fals
     metrics_dict['Adverse Effect Accuracy (%)'] =  1
     
     # Positive Potential Accuracy
+
     positive_potential_data = data[data['ite_sign']==+1]
     total = len(positive_potential_data)
     metrics_dict['Positive Potential Totals'] = total
@@ -272,18 +273,18 @@ def calculate_performance_metrics(value, value_pred, data, file_path, print=Fals
 
     metrics_dict['Adverse Effect Accuracy Change (%)'] = (metrics_dict['Adverse Effect Accuracy Accepted (%)'] - metrics_dict['Adverse Effect Accuracy Original (%)'] ) / metrics_dict['Adverse Effect Accuracy Original (%)'] * 100 if metrics_dict['Adverse Effect Accuracy Original (%)'] != 0 else 0
 
-    # Sign Accuracy
+    # Weighted Sign Accuracy
     mean_sign_error = (data['ite']*data['Sign Error']).sum() / data['ite'].sum()
     original = (1 - mean_sign_error)*100
     metrics_dict['Weighted Sign Accuracy Original (%)'] = (1 - mean_sign_error)*100
     
-    mean_sign_error_not_rejected = (data_not_rejected['ite']*data_not_rejected['Sign Error']).sum() / data_not_rejected['ite'].sum()
+    mean_sign_error_not_rejected = (data_not_rejected['ite']*data_not_rejected['Sign Error']).sum() / data_not_rejected['ite'].sum() if data_not_rejected['ite'].sum() != 0 else 0
     new = (1 - mean_sign_error_not_rejected)*100
     metrics_dict['Weighted Sign Accuracy Accepted (%)'] = (1-mean_sign_error_not_rejected) *100
 
     metrics_dict['Weighted Sign Accuracy Change (%)'] =  (new - original ) / original * 100 if original != 0 else 0
 
-    mean_sign_error_rejected = (data_rejected['ite']*data_rejected['Sign Error']).sum() / data_rejected['ite'].sum()
+    mean_sign_error_rejected = (data_rejected['ite']*data_rejected['Sign Error']).sum() / data_rejected['ite'].sum() if data_rejected['ite'].sum() != 0 else 0
     metrics_dict['Weighted Sign Accuracy Rejected (%)'] = (1-mean_sign_error_rejected)*100
 
     # Average Sign Error -- OLD
@@ -401,6 +402,7 @@ def calculate_performance_metrics(value, value_pred, data, file_path, print=Fals
     metrics_dict['RMSE Rank Weighted Rejected'] = rmse_rejected
 
     if 'y_t1_prob' in data.columns:
+
         # Step 1: Calculate the metrics (including rejected instances)
         if print==True:
             cross_tab = pd.crosstab(data[value], data[value_pred])
@@ -412,7 +414,7 @@ def calculate_performance_metrics(value, value_pred, data, file_path, print=Fals
 
         # Step 2: Data Preprocessing 
         ##  Remove rejected items
-        data = data[data[value_pred] != "R"].copy()
+        data = data[data['ite_reject'] != "R"].copy()
         data[value_pred] = data[value_pred].astype(int)
 
         if len(data[value_pred]) != 0:

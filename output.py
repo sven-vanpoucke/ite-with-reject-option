@@ -4,6 +4,9 @@
 import pandas as pd
 from tabulate import tabulate
 import time
+import pickle
+import matplotlib.pyplot as plt
+
 
 ## 0.1 Packages for the data retrieval and preprocessing
 from helper.output import helper_output_loop
@@ -18,7 +21,7 @@ from sklearn.linear_model import LogisticRegression, LinearRegression
 from ite.predictor import predictor_train_predictions, predictor_test_predictions, predictor_ite_predictions
 
 ## 0.3 Evaluation
-from evaluator.cost import categorize
+from evaluator.cost import categorize, categorize_decision
 from evaluator.performance import calculate_performance_metrics
 from evaluator.evaluator import calculate_all_metrics
 
@@ -35,7 +38,7 @@ from sklearn.svm import OneClassSVM
 
 # 0.6: Evaluation
 from helper.graphs import canvas_change_loop
-import pandas as pd
+
 
 # Chapter 1: Data retrieval and preprocessing
 ## 1.1 Set the parameters
@@ -94,11 +97,45 @@ for dataset in datasets:
         # Transform the data
         train_x, train_t, train_y, train_potential_y, test_x, test_t, test_y, test_potential_y = preprocessing_transform_data_ihdp(train_x, train_t, train_y, train_potential_y, test_x, test_y, test_t, test_potential_y)
 
+    train_x.to_csv(f'output/csv_all/{dataset}/train_x.csv', index=False)
+    train_t.to_csv(f'output/csv_all/{dataset}/train_t.csv', index=False)
+    train_y.to_csv(f'output/csv_all/{dataset}/train_y.csv', index=False)
+    train_potential_y.to_csv(f'output/csv_all/{dataset}/train_potential_y.csv', index=False)
+
+    test_x.to_csv(f'output/csv_all/{dataset}/test_x.csv', index=False)
+    test_y.to_csv(f'output/csv_all/{dataset}/test_y.csv', index=False)
+    test_t.to_csv(f'output/csv_all/{dataset}/test_t.csv', index=False)
+    test_potential_y.to_csv(f'output/csv_all/{dataset}/test_potential_y.csv', index=False)
+
     # Transform the data
     train_treated_x, train_control_x, train_treated_y, train_control_y, test_treated_x, test_control_x, test_treated_y, test_control_y = preprocessing_split_t_c_data(train_x, train_y, train_t, test_x, test_y, test_t)
     test_ite = pd.DataFrame({'ite': test_potential_y["y_t1"] - test_potential_y["y_t0"]})
     train_ite = pd.DataFrame({'ite': train_potential_y["y_t1"] - train_potential_y["y_t0"]})
     treated_x, treated_y, control_x, control_y, x, t, xt, train_xt, test_xt, y, ite, potential_y = merge_test_train(train_treated_x, train_treated_y, train_control_x, train_control_y, test_treated_x, test_treated_y, test_control_x, test_control_y, train_x, train_t, train_y, test_x, test_t, test_y, train_ite, test_ite, train_potential_y, test_potential_y, x_scaling)
+
+    train_treated_x.to_csv(f'output/csv_all/{dataset}/train_treated_x.csv', index=False)
+    train_control_x.to_csv(f'output/csv_all/{dataset}/train_control_x.csv', index=False)
+    train_treated_y.to_csv(f'output/csv_all/{dataset}/train_treated_y.csv', index=False)
+    train_control_y.to_csv(f'output/csv_all/{dataset}/train_control_y.csv', index=False)
+    
+    test_treated_x.to_csv(f'output/csv_all/{dataset}/test_treated_x.csv', index=False)
+    test_control_x.to_csv(f'output/csv_all/{dataset}/test_control_x.csv', index=False)
+    test_treated_y.to_csv(f'output/csv_all/{dataset}/test_treated_y.csv', index=False)
+    test_control_y.to_csv(f'output/csv_all/{dataset}/test_control_y.csv', index=False)
+
+    treated_x.to_csv(f'output/csv_all/{dataset}/treated_x.csv', index=False)
+    treated_y.to_csv(f'output/csv_all/{dataset}/treated_y.csv', index=False)
+    control_x.to_csv(f'output/csv_all/{dataset}/control_x.csv', index=False)
+    control_y.to_csv(f'output/csv_all/{dataset}/control_y.csv', index=False)
+    x.to_csv(f'output/csv_all/{dataset}/x.csv', index=False)
+    t.to_csv(f'output/csv_all/{dataset}/t.csv', index=False)
+    xt.to_csv(f'output/csv_all/{dataset}/xt.csv', index=False)
+    y.to_csv(f'output/csv_all/{dataset}/y.csv', index=False)
+    ite.to_csv(f'output/csv_all/{dataset}/ite.csv', index=False)
+    potential_y.to_csv(f'output/csv_all/{dataset}/potential_y.csv', index=False)
+
+    train_xt.to_csv(f'output/csv_all/{dataset}/train_xt.csv', index=False)
+    test_xt.to_csv(f'output/csv_all/{dataset}/test_xt.csv', index=False)
 
     # Chapter 2: Treatment Effect Estimation Model
     ## 2.1: T-Learner
@@ -117,20 +154,60 @@ for dataset in datasets:
     treated_y_pred, treated_y_prob, control_y_pred, control_y_prob = predictor_train_predictions(treated_model, control_model, treated_x, control_x)
     y_t1_pred, y_t0_pred, y_t1_prob, y_t0_prob, ite_prob, ite_pred = predictor_ite_predictions(treated_model, control_model, x)
 
+    train_treated_y_pred.to_csv(f'output/csv_all/{dataset}/train_treated_y_pred.csv', index=False)
+    train_control_y_pred.to_csv(f'output/csv_all/{dataset}/train_control_y_pred.csv', index=False)
+    # train_y_t1_pred.to_csv(f'output/csv_all/{dataset}/train_y_t1_pred.csv', index=False)
+    # train_y_t0_pred.to_csv(f'output/csv_all/{dataset}/train_control_y.csv', index=False)
+
     ## 2.2: S-Learner
     ### 2.1.1: Train models
     train_forest_model = RandomForestQuantileRegressor()
+    train_xt.to_csv(f'output/csv2/{dataset}/train_xt.csv', index=False)
+    train_y.to_csv(f'output/csv2/{dataset}/train_y.csv', index=False)
+
     train_forest_model.fit(train_xt, train_y.squeeze())
+
+
+    # Predictions:
+    y_lower = train_forest_model.predict(train_xt.values, quantiles=[0.025])
+    y_upper = train_forest_model.predict(train_xt.values, quantiles=[0.975])
+    y_lower2 = train_forest_model.predict(train_xt.values, quantiles=[0.05])
+    y_upper2 = train_forest_model.predict(train_xt.values, quantiles=[0.95])
+    y_lower3 = train_forest_model.predict(train_xt, quantiles=[0.10])
+    y_upper3 = train_forest_model.predict(train_xt, quantiles=[0.90])
+
+    train_xt['size_of_ci'] = ((y_upper - y_lower) + (y_upper2 - y_lower2)) /2
+    train_xt['size_of_ci2'] = ((y_upper - y_lower) + (y_upper2 - y_lower2) + (y_upper3 - y_lower3)) /2
+
+    test_y_lower = train_forest_model.predict(test_xt.values, quantiles=[0.025])
+    test_y_upper = train_forest_model.predict(test_xt.values, quantiles=[0.975])
+    test_y_lower2 = train_forest_model.predict(test_xt.values, quantiles=[0.05])
+    test_y_upper2 = train_forest_model.predict(test_xt.values, quantiles=[0.95])
+    test_y_lower3 = train_forest_model.predict(test_xt, quantiles=[0.10])
+    test_y_upper3 = train_forest_model.predict(test_xt, quantiles=[0.90])
+
+    test_xt['size_of_ci'] = ((test_y_upper - test_y_lower) + (test_y_upper2 - test_y_lower2)) /2
+    test_xt['size_of_ci2'] = ((test_y_upper - test_y_lower) + (test_y_upper2 - test_y_lower2) + (test_y_upper3 - test_y_lower3)) /3
+
+
+    # y_lower3 = train_forest_model.predict(xt, quantiles=[0.10])
+    # y_upper3 = train_forest_model.predict(xt, quantiles=[0.90])
+
+    # y_lower4 = train_forest_model.predict(xt, quantiles=[0.15])
+    # y_upper4 = train_forest_model.predict(xt, quantiles=[0.85])
+
+    # size_of_ci = ((y_upper - y_lower) + (y_upper2 - y_lower2) + (y_upper3 - y_lower3) + (y_upper4 - y_lower4)) /4 # confidence interval
+    
+    # size_of_ci = ((y_upper - y_lower) + (y_upper2 - y_lower2)) /2 # confidence interval
 
     ## 2.3: Transform the predictions
     if train_treated_y_prob is not None and not train_treated_y_prob.isna().all():
-        test_set = pd.concat([test_t, test_y_t1_pred, test_y_t1_prob, test_y_t0_pred, test_y_t0_prob, test_ite_pred, test_ite_prob, test_potential_y["y_t0"], test_potential_y["y_t1"], test_ite], axis=1)
-        train_set = pd.concat([test_t, train_y_t1_pred, train_y_t1_prob, train_y_t0_pred, train_y_t0_prob, train_ite_pred, train_ite_prob, train_potential_y["y_t0"], train_potential_y["y_t1"], train_ite], axis=1)
+        test_set = pd.concat([test_xt, test_y_t1_pred, test_y_t1_prob, test_y_t0_pred, test_y_t0_prob, test_ite_pred, test_ite_prob, test_potential_y["y_t0"], test_potential_y["y_t1"], test_ite], axis=1)
+        train_set = pd.concat([train_xt, train_y_t1_pred, train_y_t1_prob, train_y_t0_pred, train_y_t0_prob, train_ite_pred, train_ite_prob, train_potential_y["y_t0"], train_potential_y["y_t1"], train_ite], axis=1)
         all_set = pd.concat([t, y_t1_pred, y_t1_prob, y_t0_pred, y_t0_prob, ite_pred, ite_prob, potential_y["y_t0"], potential_y["y_t1"], ite], axis=1).copy()
-        
     else:
-        test_set = pd.concat([test_t, test_y_t1_pred, test_y_t0_pred, test_ite_pred, test_potential_y["y_t0"], test_potential_y["y_t1"], test_ite], axis=1)
-        train_set = pd.concat([test_t, train_y_t1_pred, train_y_t0_pred, train_ite_pred, train_potential_y["y_t0"], train_potential_y["y_t1"], train_ite], axis=1)
+        test_set = pd.concat([test_xt, test_y_t1_pred, test_y_t0_pred, test_ite_pred, test_potential_y["y_t0"], test_potential_y["y_t1"], test_ite], axis=1)
+        train_set = pd.concat([train_xt, train_y_t1_pred, train_y_t0_pred, train_ite_pred, train_potential_y["y_t0"], train_potential_y["y_t1"], train_ite], axis=1)
         all_set = pd.concat([t, y_t1_pred, y_t0_pred, ite_pred, potential_y["y_t0"], potential_y["y_t1"], ite], axis=1).copy()
         
     ## 2.4: Transform the predictions of TWINS to continuous outcomes
@@ -147,17 +224,34 @@ for dataset in datasets:
         all_set = all_set.rename(columns={'y_t1_prob': 'y_t1_pred', 'y_t0_prob': 'y_t0_pred', 'ite_prob': 'ite_pred'})
 
     ## 2.5: Merge the train and test set
-    all_data = pd.concat([train_set, test_set], ignore_index=True).copy()
+
+    all_data = pd.concat([test_set, train_set], ignore_index=True).copy()
+
+    test_set.to_csv(f'output/csv2/{dataset}/5test_set.csv', index=False)
+    train_set.to_csv(f'output/csv2/{dataset}/5train_set.csv', index=False)
+
+    all_data.to_csv(f'output/csv2/{dataset}/5all_data.csv', index=False)
 
     ## 2.6: Add columns for costs performance measurement
-    test_set['category'] = test_set.apply(categorize, axis=1, is_pred=False)
-    test_set['category_pred'] = test_set.apply(categorize, axis=1)
-    test_set['category_rej'] = test_set.apply(categorize, axis=1)
-    test_set['ite_mistake'] = test_set.apply(lambda row: 0 if row['ite_pred']==row['ite'] else 1, axis=1)
+    all_data['category'] = all_data.apply(categorize, axis=1, is_pred=False)
+    all_data['Decision'] = all_data.apply(categorize_decision, axis=1)
+    # all_data['category_pred'] = all_data.apply(categorize, axis=1)
+    # all_data['category_rej'] = all_data.apply(categorize, axis=1)
+    all_data['ite_mistake'] = all_data.apply(lambda row: False if row['ite_pred']==row['ite'] else True, axis=1)
     
     ## 2.7: Add columns for rejection performance measurement
     all_data['ite_reject'] = all_data.apply(lambda row: row['ite_pred'], axis=1)
     all_data['se'] = (all_data['ite'] - all_data['ite_pred']) ** 2
+    all_data['decile'] = pd.qcut(all_data['ite'], q=10, labels=False, duplicates='drop')
+    all_data['ite_sign'] = all_data['ite'].div(all_data['ite'].abs(), fill_value=0)
+    all_data['ite_sign'] = all_data['ite_sign'].fillna(0)
+
+    # export to csv
+    all_data.to_csv(f'output/csv/{dataset}/0_{dataset}_all_data.csv', index=False)
+    x.to_csv(f'output/csv/{dataset}/0_{dataset}_x.csv', index=False)
+    xt.to_csv(f'output/csv/{dataset}/0_{dataset}_xt.csv', index=False)
+
+    all_data.to_csv(f'output/csv2/{dataset}/6all_data.csv', index=False)
 
     all_data_list.append(all_data)
     x_list.append(x)
@@ -237,9 +331,9 @@ for dataset in datasets:
     df.to_csv(f'output/csv/{dataset}/0_{dataset}_perfect.csv', index=False)
 
     # Graph with reject rate and rmse_accepted & rmse_rejected
-    twolinegraph(rr_perfect, "Reject Rate", rmse_accepted_perfect, "RMSE of Accepted Samples", "green", rmse_rejected_perfect, "RMSE of Rejected Samples", "red", f"Impact of Reject Rate on RMSE for {dataset}", f"{folder_path}graph/{dataset}_{experiment_id}_{abbreviation}_rmse.png")
-    onelinegraph(rr_perfect, "Reject Rate", rmse_accepted_perfect, "RMSE of Accepted Samples", "green", f"Impact of Reject Rate on RMSE for {dataset}", f"{folder_path}graph/{dataset}_{experiment_id}_{abbreviation}_rmse_accepted.png")
-    onelinegraph(rr_perfect, "Reject Rate", rmse_rejected_perfect, "RMSE of Rejected Samples", "red", f"Impact of Reject Rate on RMSE for {dataset}", f"{folder_path}graph/{dataset}_{experiment_id}_{abbreviation}_rmse_rejected.png")
+    # twolinegraph(rr_perfect, "Reject Rate", rmse_accepted_perfect, "RMSE of Accepted Samples", "green", rmse_rejected_perfect, "RMSE of Rejected Samples", "red", f"Impact of Reject Rate on RMSE for {dataset}", f"{folder_path}graph/{dataset}_{experiment_id}_{abbreviation}_rmse.png")
+    # onelinegraph(rr_perfect, "Reject Rate", rmse_accepted_perfect, "RMSE of Accepted Samples", "green", f"Impact of Reject Rate on RMSE for {dataset}", f"{folder_path}graph/{dataset}_{experiment_id}_{abbreviation}_rmse_accepted.png")
+    # onelinegraph(rr_perfect, "Reject Rate", rmse_rejected_perfect, "RMSE of Rejected Samples", "red", f"Impact of Reject Rate on RMSE for {dataset}", f"{folder_path}graph/{dataset}_{experiment_id}_{abbreviation}_rmse_rejected.png")
 
     # optimal model
     min_rmse = min(rmse_accepted_perfect)  # Find the minimum
@@ -311,6 +405,16 @@ for dataset in datasets:
     abbreviation = "RFQR"
     experiment_names[experiment_id] = f"Rejection based on RandomForestQuantileRegressor - Ambiguity Type I"
     metrics_dict, reject_rates, heuristic_cutoff, metrics_results_list = ambiguity_rejection(max_rr, detail_factor, train_forest_model_list[i], xt_list[i], all_data_list[i], file_path, experiment_id, dataset, rmse_accepted_perfect)
+    
+    # Store the dictionaries in a list
+    data_to_export = [max_rr, detail_factor, train_forest_model_list, xt_list, all_data_list, file_path, experiment_id, dataset, rmse_accepted_perfect]
+
+    # Define the file path where you want to save the data
+    file_path_canvas = f"{folder_path}overleaf/data/{dataset}/ambiguity.pkl"
+
+    # Export the data to a file using pickle
+    with open(file_path_canvas, 'wb') as f:
+        pickle.dump(data_to_export, f)
 
     metrics_results[dataset].update({experiment_id: metrics_dict})
     reject_rates_list[dataset].update({experiment_id: reject_rates})
@@ -320,9 +424,21 @@ for dataset in datasets:
 
 
 # CHAPTER 5: Report Performance Evaluation
-canvas_change_loop(reject_rates_list, metrics_results_list_global, "RMSE Change (%)", experiment_ids_list, dataset, folder_path, heuristic_cutoff_list, 'Reject Rate (%)','RMSE Deviation from No-Rejection (%)', 'rmse', -11, 3, f'Impact of Rejection on the RMSE of the TE', datasets)
-canvas_change_loop(reject_rates_list, metrics_results_list_global, "Similarity 50% Improved (%)", experiment_ids_list, dataset, folder_path, heuristic_cutoff_list, 'Reject Rate (%)','Similarity 50% Deviation from No-Rejection (%)', 'similarity', -4, 6, f'Impact of Rejection on the similarity (50%) Metric', datasets)
-canvas_change_loop(reject_rates_list, metrics_results_list_global, "Achieved Result by top 50% Improved (%)", experiment_ids_list, dataset, folder_path, heuristic_cutoff_list, 'Reject Rate (%)','Achieved result 50% Deviation from No-Rejection (%)', 'achievedresult', -40, 40, f'Impact of Rejection on the Achieved Result (50%) Metric', datasets)
+# canvas_change_loop(reject_rates_list, metrics_results_list_global, "RMSE Change (%)", experiment_ids_list, dataset, folder_path, heuristic_cutoff_list, 'Reject Rate (%)','RMSE Deviation from No-Rejection (%)', 'rmse', -11, 3, f'Impact of Rejection on the RMSE of the TE', datasets)
+# canvas_change_loop(reject_rates_list, metrics_results_list_global, "Similarity 50% Improved (%)", experiment_ids_list, dataset, folder_path, heuristic_cutoff_list, 'Reject Rate (%)','Similarity 50% Deviation from No-Rejection (%)', 'similarity', -4, 6, f'Impact of Rejection on the similarity (50%) Metric', datasets)
+# canvas_change_loop(reject_rates_list, metrics_results_list_global, "Achieved Result by top 50% Improved (%)", experiment_ids_list, dataset, folder_path, heuristic_cutoff_list, 'Reject Rate (%)','Achieved result 50% Deviation from No-Rejection (%)', 'achievedresult', -40, 40, f'Impact of Rejection on the Achieved Result (50%) Metric', datasets)
+
+# Store the dictionaries in a list
+data_to_export = [reject_rates_list, metrics_results_list_global, experiment_ids_list, heuristic_cutoff_list,datasets]
+
+# Define the file path where you want to save the data
+file_path_canvas = f"{folder_path}overleaf/data/canvas.pkl"
+
+# Export the data to a file using pickle
+with open(file_path_canvas, 'wb') as f:
+    pickle.dump(data_to_export, f)
+
+# Old:
 # canvas_change_loop(reject_rates_list, metrics_results_list_global, "Sign Accuracy change (%)", experiment_ids_list, dataset, folder_path, heuristic_cutoff_list, 'Reject Rate (%)','Sign Accuracy Deviation from No-Rejection (%)', 'signaccuracy', -30, 80, f'Impact of Rejection on the Sign Accuracy of the TE', datasets)
 # canvas_change_loop(reject_rates_list, metrics_results_list_global, "Weighted Sign Accuracy change (%)", experiment_ids_list, dataset, folder_path, heuristic_cutoff_list, 'Reject Rate (%)','Weighted Sign Accuracy Deviation from No-Rejection (%)', 'weightedsignaccuracy',  -30, 80, f'Impact of Rejection on Weighted Sign Accuracy of the TE', datasets)
 # canvas_change_loop(reject_rates_list, metrics_results_list_global, "Positive Potential Accuracy change (%)", experiment_ids_list, dataset, folder_path, heuristic_cutoff_list, 'Reject Rate (%)','Positive Potential Accuracy Deviation from No-Rejection (%)', 'positivepotential', -10, 10, f'Impact of Rejection on the Positive Potential Accuracy', datasets)
@@ -331,6 +447,9 @@ canvas_change_loop(reject_rates_list, metrics_results_list_global, "Achieved Res
 i = -1
 for dataset in datasets:
     i += 1
+    # canvas_change(reject_rates_list[dataset],"Achieved Result by top 10% Improved (%)", "Achieved Result by top 20% Improved (%)", "Achieved Result by top 30% Improved (%)", "Achieved Result by top 40% Improved (%)", "Achieved Result by top 50% Improved (%)", metrics_results_list_global[dataset], experiment_ids_list[dataset], dataset, folder_path, heuristic_cutoff_list[dataset], 'Reject Rate (%)','Achieved Result (%)', 'achievedresult', -100, 50, f'Impact of Rejection ({dataset})')
+
+    # OLD CODE:
     # plot_summary(reject_rates_list[dataset], rmse_accepted_list[dataset], experiment_ids_list[dataset], dataset, folder_path, "Impact RR on RMSE Accepted", "RMSEAccepted")
     # plot_summary(reject_rates_list[dataset], [result.get('RMSE Accepted', None) for result in metrics_results_list_global[dataset][2]], experiment_ids_list[dataset], dataset, folder_path, "Impact RR on RMSE Accepted", "RMSEAccepted")
     # plot_summary(reject_rates_list[dataset], rmse_rank_accepted_list[dataset], experiment_ids_list[dataset], dataset, folder_path, "Impact RR on RMSE Rank Accepted", "RMSERankAccepted")
@@ -345,16 +464,12 @@ for dataset in datasets:
     # canvas_change(reject_rates_list[dataset],"Weighted Sign Accuracy Accepted (%)", "Weighted Sign Accuracy Rejected (%)", metrics_results_list_global[dataset], experiment_ids_list[dataset], dataset, folder_path, heuristic_cutoff_list[dataset], 'Reject Rate (%)','Weighted Sign Accuracy (%)', 'weightedsignaccuracy', 0, 100, f'Impact of Rejection ({dataset})')
     # canvas_change(reject_rates_list[dataset],"Adverse Effect Accuracy Accepted (%)", "Adverse Effect Accuracy Rejected (%)", metrics_results_list_global[dataset], experiment_ids_list[dataset], dataset, folder_path, heuristic_cutoff_list[dataset], 'Reject Rate (%)','Adverse Effect Accuracy (%)', 'adverseeffect', 0, 100, f'Impact of Rejection ({dataset})')
     # canvas_change(reject_rates_list[dataset],"Positive Potential Accuracy Accepted (%)", "Positive Potential Accuracy Rejected (%)", metrics_results_list_global[dataset], experiment_ids_list[dataset], dataset, folder_path, heuristic_cutoff_list[dataset], 'Reject Rate (%)','Positive Potential Accuracy (%)', 'positivepotential', 0, 100, f'Impact of Rejection ({dataset})')
-    canvas_change(reject_rates_list[dataset],"Achieved Result by top 10% Improved (%)", "Achieved Result by top 20% Improved (%)", "Achieved Result by top 30% Improved (%)", "Achieved Result by top 40% Improved (%)", "Achieved Result by top 50% Improved (%)", metrics_results_list_global[dataset], experiment_ids_list[dataset], dataset, folder_path, heuristic_cutoff_list[dataset], 'Reject Rate (%)','Achieved Result (%)', 'achievedresult', -100, 50, f'Impact of Rejection ({dataset})')
 
     # canvas_change(reject_rates_list[dataset], [result.get('Similarity 50% Accepted (%)', None) for result in metrics_results_list_global[dataset]], [result.get('Similarity 50% Rejected (%)', None) for result in metrics_results_list_global[dataset]], experiment_ids_list[dataset], dataset, folder_path, heuristic_cutoff_list[dataset], 'Reject Rate (%)','RMSE Deviation from No-Rejection (%)', 'signaccuracy', 0, 100, f'Impact of Rejection on the RMSE of the TE ({dataset})')
     # canvas_change(reject_rates_list[dataset], [result.get('Sign Accuracy Accepted (%)', None) for result in metrics_results_list_global[dataset]], [result.get('Sign Accuracy Rejected (%)', None) for result in metrics_results_list_global[dataset]], experiment_ids_list[dataset], dataset, folder_path, heuristic_cutoff_list[dataset], 'Reject Rate (%)','RMSE Deviation from No-Rejection (%)', 'similarity', 0, 100, f'Impact of Rejection on the RMSE of the TE ({dataset})')
     # canvas_change(reject_rates_list[dataset], [result.get('Weighted Sign Accuracy Accepted (%)', None) for result in metrics_results_list_global[dataset]],[result.get('Weighted Sign Accuracy Rejected (%)', None) for result in metrics_results_list_global[dataset]], experiment_ids_list[dataset], dataset, folder_path, heuristic_cutoff_list[dataset], 'Reject Rate (%)','RMSE Deviation from No-Rejection (%)', 'weightedsignaccuracy', 0, 100, f'Impact of Rejection on the RMSE of the TE ({dataset})')
     # canvas_change(reject_rates_list[dataset], [result.get('Adverse Effect Accuracy Accepted (%)', None) for result in metrics_results_list_global[dataset]],[result.get('Adverse Effect Accuracy Rejected (%)', None) for result in metrics_results_list_global[dataset]], experiment_ids_list[dataset], dataset, folder_path, heuristic_cutoff_list[dataset], 'Reject Rate (%)','RMSE Deviation from No-Rejection (%)', 'adverseeffect', 0, 100, f'Impact of Rejection on the RMSE of the TE ({dataset})')
     # canvas_change(reject_rates_list[dataset], [result.get('Positive Potential Accuracy Accepted (%)', None) for result in metrics_results_list_global[dataset]],[result.get('Positive Potential Accuracy Rejected (%)', None) for result in metrics_results_list_global[dataset]], experiment_ids_list[dataset], dataset, folder_path, heuristic_cutoff_list[dataset], 'Reject Rate (%)','RMSE Deviation from No-Rejection (%)', 'positivepotential', 0, 100, f'Impact of Rejection on the RMSE of the TE ({dataset})')
-
-    #######################################################################################################################
-    metrics_results[dataset] = pd.DataFrame.from_dict(metrics_results[dataset], orient='index')
 
     # Chapter 8: Output to file
     with open(file_path, 'a') as file:
@@ -367,7 +482,45 @@ for dataset in datasets:
             file.write(f"# Experiment {exp_number}: {description}\n")
 
         file.write("\nTable of results of the experiments\n")
-        file.write(tabulate(metrics_results[dataset].transpose(), headers='keys', tablefmt='rounded_grid', showindex=True))
+        df = pd.DataFrame(metrics_results[dataset])
+        df = df.transpose() 
+        file.write(tabulate(df.transpose(), headers='keys', tablefmt='rounded_grid', showindex=True))
+
+# Graph: RMSE vs Reject Rate
+twinsc_rmse = {}
+twinsc_rmse_change = {}
+twinsc_reject_rates = {} 
+ihdp_reject_rates = {}
+ihdp_rmse = {}
+ihdp_rmse_change = {}
+
+# Define the data for TWINSC dataset
+for experiment_id, reject_rates in reject_rates_list['TWINSC'].items():
+    twinsc_reject_rates[experiment_id] = reject_rates
+
+for i in range(1, len(reject_rates_list['TWINSC']) + 1):  # Adjusting range to start from 1
+    twinsc_rmse[i] = [result.get('RMSE Accepted', None) for result in metrics_results_list_global.get('TWINSC', {}).get(i, {})]
+    twinsc_rmse_change[i] = [result.get('RMSE Change', None) for result in metrics_results_list_global.get('TWINSC', {}).get(i, {})]
+
+# Define the data for IHDP dataset
+for experiment_id, reject_rates in reject_rates_list['IHDP'].items():
+    ihdp_reject_rates[experiment_id] = reject_rates
+
+for i in range(1, len(reject_rates_list['IHDP']) + 1):  # Adjusting range to start from 1
+    ihdp_rmse[i] = [result.get('RMSE Accepted', None) for result in metrics_results_list_global.get('IHDP', {}).get(i, {})]
+    ihdp_rmse_change[i] = [result.get('RMSE Change', None) for result in metrics_results_list_global.get('IHDP', {}).get(i, {})]
+
+# Store the dictionaries in a list
+data_to_export = [twinsc_rmse, twinsc_rmse_change, twinsc_reject_rates,
+                  ihdp_reject_rates, ihdp_rmse, ihdp_rmse_change]
+
+# Define the file path where you want to save the data
+file_path = f"{folder_path}overleaf/data/rmserejectcurve.pkl"
+
+# Export the data to a file using pickle
+with open(file_path, 'wb') as f:
+    pickle.dump(data_to_export, f)
+
 
 end_time = time.time()
 runtime = end_time - start_time

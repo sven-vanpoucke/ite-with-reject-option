@@ -15,7 +15,7 @@ def plot_summary(reject_rates_list, rmse_rank_accepted_list, experiment_ids_list
     plt.legend()
     plt.grid(True)
 
-    plt.savefig(f"{folder_path}graph/{dataset}_All_{file_name}.png")
+    plt.savefig(f"{folder_path}graph/{dataset}_All_{file_name}.pdf")
     plt.close()
     plt.cla()
 
@@ -38,7 +38,7 @@ def plot_canvas(reject_rates_list, rmse_rank_accepted_list, experiment_ids_list,
     plt.tight_layout(rect=[0, 0, 1, 0.96])  # Adjust subplot layout
 
     # Save the combined plot as an image
-    plt.savefig(f"{folder_path}graph/{dataset}_All_{file_name}.png")
+    plt.savefig(f"{folder_path}graph/{dataset}_All_{file_name}.pdf")
     plt.close()
     plt.cla()
 
@@ -81,7 +81,7 @@ def canvas_change(reject_rates_list, metric_name, metric_name2, metric3, metric4
     plt.tight_layout(rect=[0, 0, 1, 0.96])  # Adjust subplot layout
 
     # Save the combined plot as an image
-    plt.savefig(f"{folder_path}overleaf/{folder}/{dataset}_All.png")
+    plt.savefig(f"{folder_path}overleaf/{folder}/{dataset}_All.pdf")
     plt.close()
     plt.cla()
     
@@ -120,7 +120,7 @@ def canvas_change_loop(reject_rates_list, metric_list, metric_name, experiment_i
     plt.tight_layout(rect=[0, 0, 1, 0.96])  # Adjust subplot layout
 
     # Save the combined plot as an image
-    plt.savefig(f"{folder_path}overleaf/{folder}/All_All.png")
+    plt.savefig(f"{folder_path}overleaf/{folder}/All_All.pdf")
     plt.close()
     plt.cla()
 
@@ -159,7 +159,7 @@ def canvas_change_loop(reject_rates_list, metric_list, metric_name, experiment_i
     plt.tight_layout(rect=[0, 0, 1, 0.96])  # Adjust subplot layout
 
     # Save the combined plot as an image
-    plt.savefig(f"{folder_path}overleaf/{folder}/Nov_vs_Amb.png")
+    plt.savefig(f"{folder_path}overleaf/{folder}/Nov_vs_Amb.pdf")
     plt.close()
     plt.cla()
 
